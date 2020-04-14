@@ -11,12 +11,6 @@ y2 = np.arange(0,1,Ts)
 y3 = np.arange(0,1,Ts)
 y4 = np.arange(0,1,Ts)
 
-n = len(y1) # length of the signal
-k = np.arange(n)
-T = n/Fs
-frq = k/T # a vector of frequencies; two sides frequency range
-frq = frq[range(int(n/2))] # one side frequency range
-
 serdev = '/dev/ttyACM0'
 s = serial.Serial(serdev, 115200)
 for x in range(0, int(Fs)):
@@ -32,21 +26,6 @@ for x in range(0, int(Fs)):
 
     line=s.readline()
     y4[x] = int(line)
-
-#for x in range(0, int(Fs)):
-#    line=s.readline() # Read an echo string from K66F terminated with '\n'
-#    # print line
-#    y2[x] = float(line)
-
-#for x in range(0, int(Fs)):
-#    line=s.readline() # Read an echo string from K66F terminated with '\n'
-#    # print line
-#    y3[x] = float(line)
-
-#for x in range(0, int(Fs)):
-#    line=s.readline() # Read an echo string from K66F terminated with '\n'
-#    # print line
-#    y4[x] = float(line)
 
 fig, ax = plt.subplots(2, 1)
 ax[0].plot(t,y1,label='X')

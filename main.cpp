@@ -22,25 +22,21 @@
 #define FXOS8700Q_M_CTRL_REG2 0x5C
 #define FXOS8700Q_WHOAMI_VAL 0xC7
 
-InterruptIn btn(SW2);
-I2C i2c( PTD9,PTD8);
+InterruptIn btn(SW2); // btn input for interrupt
+I2C i2c( PTD9,PTD8); 
 Serial pc(USBTX, USBRX);
 int m_addr = FXOS8700CQ_SLAVE_ADDR1;
-DigitalOut led2(LED2);
+DigitalOut led2(LED2); // GREEN LED output
 
 Thread thread1(osPriorityLow);
 Thread thread2(osPriorityNormal);
 EventQueue queue1(32 * EVENTS_EVENT_SIZE);
 EventQueue queue2(32 * EVENTS_EVENT_SIZE);
 
-float Xdata[100];
-float Ydata[100];
-float Zdata[100];
-float tiltdata[100];
+/*-------------------log acc vector function-------------------*/
 
 void FXOS8700CQ_readRegs(int addr, uint8_t * data, int len);
 void FXOS8700CQ_writeRegs(uint8_t * data, int len);
-
 void acc_measure() {
 
    pc.baud(115200);
@@ -61,7 +57,7 @@ void acc_measure() {
    FXOS8700CQ_readRegs(FXOS8700Q_WHOAMI, &who_am_i, 1);
 
    int j;
-   for(j=0;j<100;j++){
+   for(j=0;j<100;j++){ // for sampling 100 times ( 10 seconds / 0.1second )
 
       FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
 
@@ -79,23 +75,21 @@ void acc_measure() {
       if (acc16 > UINT14_MAX/2)
          acc16 -= UINT14_MAX;
       t[2] = ((float)acc16) / 4096.0f;
-      if(t[0]>0.5||t[0]<-0.5||t[1]>0.5||t[1]<-0.5)
+      if(t[0]>0.5||t[0]<-0.5||t[1]>0.5||t[1]<-0.5) // if x or y tilt > 45 degree
       {
          tilt = 1;
       }
-      else
+      else // x & y tilt < 45 degree
       {
          tilt = 0;
       }
       
-      /*printf("FXOS8700Q ACC: X=%1.4f(%x%x) Y=%1.4f(%x%x) Z=%1.4f(%x%x)\r\n",\
-            t[0], res[0], res[1],\
-            t[1], res[2], res[3],\
-            t[2], res[4], res[5]\
-      );
-      printf("Tlit: %d\r\n\n",tilt);*/
       printf("%1.4f\r\n%1.4f\r\n%1.4f\r\n%d\r\n",t[0],t[1],t[2],tilt);
-      wait(0.1);
+      // t[0] == X
+      // t[1] == Y
+      // t[2] == Z
+
+      wait(0.1); // sample once in 0.1 second
    }
    
 }
@@ -110,13 +104,15 @@ void FXOS8700CQ_writeRegs(uint8_t * data, int len) {
    i2c.write(m_addr, (char *)data, len);
 }
 
+/*-------------------blink the LED function-------------------*/
+
 void blink_led(){
    int i;
    led2 = 1;
-   queue2.call(&acc_measure);
-   for(i=0;i<20;i++){
+   queue2.call(&acc_measure); // call() APIs of queue for acc vector logging
+   for(i=0;i<20;i++){ // blinking 10 seconds
       led2 = !led2;
-      wait(0.5);
+      wait(0.5); // blink once in one second
    }
 }
 
